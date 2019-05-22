@@ -9,23 +9,16 @@ class DB:
     def __init__(self, dbdir = './'):
         try:
             self.dir = dbdir
-            self.data = h5py.File(dbdir + 'index.hdf5', 'r+')
+            self.data = h5py.File(dbdir + 'index.hdf5', 'a')
         except Exception as e:
             raise e
 
     def insert(self, cat, path, data):
         name = DB.path2md5(path)
         try:
-            self.data.create_dataset(cat + '/' + name, data = data)
+            self.data.create_dataset(cat + '/' + name, data = data, compression='gzip')
         except Exception as e:
             print(e)
-
-    def getcat(self, cat):
-        try:
-            return self.data[cat]
-        except Exception as e:
-            print(e)
-            return None
 
     def get(self, idx):
         try:
