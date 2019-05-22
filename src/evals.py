@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+import os
 
 def showImage(img):
     cv2.imshow('dst',img)
@@ -13,9 +14,25 @@ def showImage(img):
 Compares 2 images based on color histograms of 2 images
 """
 class Histogram:
+    name = 'histogram'
+
     @staticmethod
     def channels():
         return ('b', 'g', 'r')
+
+    @staticmethod
+    def index(db, datadir):
+        print('HISTOGRAM indexing ...')
+        try:
+            for (root, dirs, files) in os.walk(datadir):
+                for f in files:
+                    if f.endswith('jpg') or f.endswith('png'):
+                        path = os.path.join(root, f)
+                        val = Histogram.calc(path)
+                        db.insert(Histogram.name, path, val)
+        except Exception as e:
+            raise e
+        print('done.')
 
     @staticmethod
     def calc(fname):
@@ -48,14 +65,27 @@ class Histogram:
 Compares 2 images using SIFT
 """
 class SIFT:
-    ## default config
-    @staticmethod
-    def config():
-        blocksize = 2
-        ksize     = 3
-        k         = 0.05
+    name = 'sift'
+    sift = cv2.xfeatures2d.SIFT_create()
+    matcher = cv2.BFMatcher()
 
-        return (blocksize, ksize, k)
+    ## default config
+    ratio = 0.75
+    match_k = 2
+
+    @staticmethod
+    def index(db, datadir):
+        print('SIFT indexing ...')
+        try:
+            for (root, dirs, files) in os.walk(datadir):
+                for f in files:
+                    if f.endswith('jpg') or f.endswith('png'):
+                        path = os.path.join(root, f)
+                        kp, desc = SIFT.calc(path)
+                        db.insert(SIFT.name, path, val)
+        except Exception as e:
+            raise e
+        print('done.')
 
     @staticmethod
     def calc(fname):
@@ -66,18 +96,22 @@ class SIFT:
         except Exception as e:
             raise e
 
-        config = SIFT.config()
+        kp, desc = SIFT.sift.detectAndCompute(img,None)
+        #out = cv2.drawKeypoints(img, kp, img)
 
-        ## find corners by harris
-        sift = cv2.xfeatures2d.SIFT_create()
-        kp = sift.detect(img,None)
-        out = cv2.drawKeypoints(img, kp, img)
-
-        showImage(out)
+        #showImage(out)
+        return (kp, desc)
 
     @staticmethod
-    def distance(f1, f2):
-        pass
+    def distance(desc1, desc2):
+        matches = SIFT.matcher.knnMatch(desc1, desc2, k=SIFT.match_k)
+        print(len(matches), "matches")
+
+        good = []
+
+        for m,n in matches:
+            print(type(m), n.distance)
+
 
 class ResNet:
     pass

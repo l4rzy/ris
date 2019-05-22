@@ -11,18 +11,8 @@ class Engine:
 
     ## walk in datadir recursively to lookup for files, then calculate its
     ## vectors, save it to database
-    def index(self):
-        print('indexing ...')
-        try:
-            for (root, dirs, files) in os.walk(self.datadir):
-                for f in files:
-                    if f.endswith('jpg') or f.endswith('png'):
-                        path = os.path.join(root, f)
-                        val = Histogram.calc(path)
-                        self.db.insert('histogram', path, val)
-        except Exception as e:
-            raise e
-        print('done.')
+    def index(self, method):
+        method.index(self.db, self.datadir)
 
     ## get the value of picture
     def getval(self, cat, path):
@@ -41,7 +31,7 @@ class Engine:
             val = self.db.get(cat + '/' + img)
 
 
-    def look(self, path):
+    def look(self, path, method):
         target = self.getval('histogram', path)
         ddict = {}
 
@@ -61,4 +51,4 @@ class Engine:
             raise e
 
         for k in sorted(ddict, key=ddict.get):
-            print(k)
+            print(f'{k}: [{ddict[k]}]')
