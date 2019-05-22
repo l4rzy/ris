@@ -70,6 +70,7 @@ class SIFT:
     matcher = cv2.BFMatcher()
 
     ## default config
+    coefficient = 1000.0
     ratio = 0.75
     match_k = 2
 
@@ -82,7 +83,7 @@ class SIFT:
                     if f.endswith('jpg') or f.endswith('png'):
                         path = os.path.join(root, f)
                         kp, desc = SIFT.calc(path)
-                        db.insert(SIFT.name, path, val)
+                        db.insert(SIFT.name, path, desc)
         except Exception as e:
             raise e
         print('done.')
@@ -102,16 +103,20 @@ class SIFT:
         #showImage(out)
         return (kp, desc)
 
+    ## distance is the inverse of how many good matches between 2 images
     @staticmethod
     def distance(desc1, desc2):
         matches = SIFT.matcher.knnMatch(desc1, desc2, k=SIFT.match_k)
-        print(len(matches), "matches")
 
-        good = []
+        good = 0
 
         for m,n in matches:
-            print(type(m), n.distance)
+            if m.distance < SIFT.ratio * n.distance:
+                good += 1
 
+        if good == 0:
+            return 2* SIFT.coefficient
+        return SIFT.coefficient/good
 
 class ResNet:
     pass
