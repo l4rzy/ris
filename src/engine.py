@@ -1,9 +1,10 @@
 import os
 from database import DB
 from evals import Histogram
+from timeit import default_timer as timer
 
 class Engine:
-    def __init__(self, datadir, dbdir = './'):
+    def __init__(self, datadir, dbdir):
         self.limit = 20
         self.datadir = datadir
         self.dbdir = dbdir
@@ -32,10 +33,11 @@ class Engine:
         if target is None:
             kp, target = method.calc(path)
 
+        start = timer()
         try:
             for (root, dirs, files) in os.walk(self.datadir):
                 for f in files:
-                    if f.endswith('jpg') or f.endswith('png'):
+                    if f.endswith('jpg'):
                         path = os.path.join(root, f)
                         val = self.getraw(method.name, path)
                         if val is None:
@@ -49,6 +51,9 @@ class Engine:
 
         except Exception as e:
             raise e
+
+        end = timer()
+        print(f"Took {end-start} second(s) to complete searching among vectors")
 
         results = {}
         i = 1
